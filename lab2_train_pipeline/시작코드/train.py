@@ -7,7 +7,7 @@
 목표는 하나입니다 — **두 번 돌리면 같은 것이 나오게.**
     python ../검증/check-repro.py .
 """
-import json, pathlib, sys
+import json, pathlib, sys ,hashlib
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -23,7 +23,7 @@ OUT.mkdir(parents=True, exist_ok=True)
 FEATURES = ["attend_rate_4w", "late_count_4w", "assign_submit_rate",
             "assign_late_rate", "consult_count", "prior_experience"]
 TARGET = "dropped"
-
+SEED = 20261121
 # ── 데이터 ─────────────────────────────────────────────
 df = pd.concat([pd.read_csv(SRC / f"trainees_{c}.csv") for c in ["2025-1", "2025-2"]],
                ignore_index=True)
@@ -32,13 +32,13 @@ df[FEATURES] = df[FEATURES].fillna(df[FEATURES].median())
 
 # ── 나누기 ─────────────────────────────────────────────
 # TODO 1 — 여기가 매번 달라지는 자리입니다. 무엇을 고정해야 합니까?
-X_tr, X_va, y_tr, y_va = train_test_split(df[FEATURES], df[TARGET], test_size=0.25)
+X_tr, X_va, y_tr, y_va = train_test_split(df[FEATURES], df[TARGET], test_size=0.25, random_state=SEED)
 
 # ── 학습 ──────────────────────────────────────────────
 # TODO 2 — 모델에도 고정해야 할 것이 있습니다
 model = Pipeline([
     ("scale", StandardScaler()),
-    ("clf", LogisticRegression(max_iter=1000, class_weight="balanced")),
+    ("clf", LogisticRegression(max_iter=1000, class_weight="balanced", random_state=SEED)),
 ])
 model.fit(X_tr, y_tr)
 
@@ -58,7 +58,18 @@ pd.DataFrame({"y_true": y_va.values, "y_pred": pred, "proba": proba.round(6)}) \
 
 # TODO 3 — RUN.json 에 무엇을 남겨야 「이 모델은 무엇으로 배웠는가」에 답할 수 있습니까?
 #   점검기가 보는 것: seed · params · data_sha256(또는 data_version) · metrics
+# record = {
+#     "metrics": metrics,
+# }
+files = [SRC / f"trainees_{c}.csv" for c in ["2025-1", "2025-2"]]
+h = hashlib.sha256()
+for f in files:
+    h.update(f.read_bytes())
+
 record = {
+    "seed": SEED,
+    "params": {"test_size": 0.25, "max_iter": 1000, "class_weight": "balanced"},
+    "data_sha256": h.hexdigest(),
     "metrics": metrics,
 }
 (OUT / "RUN.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")

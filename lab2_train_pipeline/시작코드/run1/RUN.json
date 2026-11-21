@@ -1,0 +1,15 @@
+{
+  "seed": 20261121,
+  "params": {
+    "test_size": 0.25,
+    "max_iter": 1000,
+    "class_weight": "balanced"
+  },
+  "data_sha256": "c18302224634bc8e5eb53e2013a00eb141f9df6f73391514e5548874aa5cfae1",
+  "metrics": {
+    "recall": 0.7381,
+    "precision": 0.5082,
+    "f1": 0.6019,
+    "auc": 0.8228
+  }
+}
