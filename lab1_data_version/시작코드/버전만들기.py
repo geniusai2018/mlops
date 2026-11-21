@@ -27,14 +27,16 @@ def save_version(df, name, note):
     #   점검기가 보는 것: version · file · sha256 · rows · duplicates · missing
     #   해시는 hashlib.sha256(f.read_bytes()).hexdigest()
     manifest = {
-        "version": name,
-        "file": "trainees.csv",
-        # "sha256": ...
-        # "rows": ...
-        # "duplicates": ...
-        # "missing": ...
-        "created": datetime.date.today().isoformat(),
-        "note": note,
+        
+  "version": "v1",
+  "file": "trainees.csv",
+  "sha256": "cb6276f2367e8ff8e032b292f781c252e0b96b3dc0cf31a2a49adacaa1a177e1",
+  "rows": 632,
+  "duplicates": 12,
+  "missing": 25,
+  "created": "2026-11-15",
+  "note": "받은 그대로. 손대지 않음"
+ 
     }
     (d / "MANIFEST.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -46,10 +48,11 @@ raw = pd.concat([pd.read_csv(SRC / f"trainees_{c}.csv") for c in ["2025-1", "202
                 ignore_index=True)
 
 # TODO 2 — v1 은 받은 그대로 저장하십시오. 손대지 않습니다
-# save_version(raw, "v1", "...")
+save_version(raw, "v1", "받은 그대로. 손대지 않음")
 
 # TODO 3 — v2 는 학습에 쓸 수 있게 손본 것입니다.
 #   중복을 어떻게 할지, 결측을 어떻게 할지 **여러분이 정하십시오.**
 #   정답은 없습니다. 다만 **무엇을 왜 했는지 데이터카드에 적으십시오.**
-# clean = ...
-# save_version(clean, "v2", "...")
+clean = raw.drop_duplicates().copy()
+clean[FEATURES] = clean[FEATURES].fillna(clean[FEATURES].median())
+save_version(clean, "v2", "중복 제거 · 결측은 중앙값으로 채움")

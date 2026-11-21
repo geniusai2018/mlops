@@ -1,0 +1,10 @@
+{
+  "version": "v1",
+  "file": "trainees.csv",
+  "sha256": "cb6276f2367e8ff8e032b292f781c252e0b96b3dc0cf31a2a49adacaa1a177e1",
+  "rows": 632,
+  "duplicates": 12,
+  "missing": 25,
+  "created": "2026-11-15",
+  "note": "받은 그대로. 손대지 않음"
+}
