@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>실습 화면 확인</title>
+<style>
+:root{--bg:#f4f4f1;--card:#fff;--fg:#1c2321;--muted:#5f6a66;--line:#dfe2dc;--accent:#2a5d8f;--accent-soft:#e3edf7;
+--ok:#1f7a46;--ok-soft:#e2f3e9;--bad:#b3261e;--bad-soft:#fbe7e5;--warn:#8a5a00;--chip:#eef2f6;--track:#e7eae6;color-scheme:light;
+font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#131715;--card:#1c2220;--fg:#e7ebe9;--muted:#9ba6a1;--line:#2e3633;--accent:#7fb2e5;
+--accent-soft:#1f2f3f;--ok:#6fd39a;--ok-soft:#18301f;--bad:#ff8a80;--bad-soft:#3a1f1d;--warn:#ffd27a;--chip:#22303d;--track:#2a322f;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-size:15px;line-height:1.55}
+main{max-width:1240px;margin:0 auto;padding:22px 16px 60px}
+h1{font-size:24px;margin:0 0 2px}h2{font-size:17px;margin:0 0 2px}.lead{color:var(--muted);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-width:0}
+.here{font-size:13px;color:var(--muted);margin:0 0 12px;border-left:3px solid var(--accent);padding-left:8px}
+.no{display:inline-block;font-size:12px;font-weight:700;color:var(--accent)}
+/* 따라 해 보기 */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:8px;margin:0 0 14px;padding:0;list-style:none}
+.steps li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.steps li .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--chip);color:var(--accent);font-weight:700;display:grid;place-items:center}
+.steps li.done{border-color:var(--ok);background:var(--ok-soft)}.steps li.done .n{background:var(--ok);color:var(--card)}
+.steps li b{display:block}.steps li small{color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:14px}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+/* 지금 답하는 모델 띠 */
+.now{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;background:var(--accent-soft);border-radius:12px;padding:10px 14px;margin:0 0 14px}
+.now .v{font-size:26px;font-weight:800;color:var(--accent)}.now .dot{width:10px;height:10px;border-radius:50%;background:var(--ok)}
+.now .dot.off{background:var(--bad)}.now small{color:var(--muted)}
+/* 슬라이더 */
+.field{margin:0 0 10px}.field .top{display:flex;justify-content:space-between;font-size:14px}.field .val{font-weight:700;font-variant-numeric:tabular-nums}
+.field input[type=range]{width:100%;accent-color:var(--accent)}.field .hint{font-size:12px;color:var(--muted)}
+.toggle{display:flex;gap:6px}.toggle button{flex:1}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}button.on{background:var(--accent);border-color:var(--accent);color:var(--card)}
+button.main{background:var(--accent);border-color:var(--accent);color:var(--card);font-weight:700}
+button:disabled{opacity:.5;cursor:wait}
+/* 게이지 */
+.gauge{margin:14px 0 4px}.bar{position:relative;height:30px;border-radius:8px;background:var(--track);overflow:hidden}
+.fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--ok);transition:width .5s,background .3s}
+.fill.hi{background:var(--bad)}
+.th{position:absolute;top:-4px;bottom:-4px;left:50%;width:3px;background:var(--fg)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:2px}
+.answer{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-top:8px}
+.risk{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.verdict{font-weight:800;font-size:18px;padding:3px 12px;border-radius:999px}
+.verdict.hi{background:var(--bad-soft);color:var(--bad)}.verdict.lo{background:var(--ok-soft);color:var(--ok)}
+.who{color:var(--muted);font-size:14px}.change{margin-top:8px;font-size:14px;min-height:22px}
+.flash{animation:fl 1.2s}@keyframes fl{0%{box-shadow:0 0 0 4px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+/* 모델 카드 */
+.models{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr));gap:10px}
+.m{position:relative;border:2px solid var(--line);border-radius:12px;padding:12px;background:var(--card);transition:border-color .3s,background .3s}
+.m.prod{border-color:var(--ok);background:var(--ok-soft)}
+.m .ver{font-size:22px;font-weight:800}.m .lab{font-size:13px;color:var(--muted);min-height:20px}
+.m .tag{position:absolute;top:-11px;right:10px;background:var(--ok);color:var(--card);font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px}
+.m .g{font-size:12px;margin:6px 0 0;min-height:36px}.m button{width:100%;margin-top:8px}
+.rule{font-size:13px;color:var(--muted);margin:10px 0 0}
+.rollback{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+/* 결과 상자 */
+.result{margin-top:12px;border-radius:12px;padding:12px 14px;display:none}
+.result.show{display:block}.result.ok{background:var(--ok-soft)}.result.bad{background:var(--bad-soft)}.result.info{background:var(--chip)}
+.result .t{font-size:18px;font-weight:800}.result.ok .t{color:var(--ok)}.result.bad .t{color:var(--bad)}
+.meter{display:grid;grid-template-columns:62px minmax(0,1fr) 54px;gap:8px;align-items:center;font-size:13px;margin-top:6px}
+.meter .bar{height:14px}.meter .fill{transition:none}.meter .th{width:2px}
+.result pre{white-space:pre-wrap;font-size:12px;color:var(--muted);margin:8px 0 0;font-family:ui-monospace,Consolas,monospace}
+/* 기록 */
+.log{list-style:none;margin:0;padding:0;max-height:330px;overflow:auto}
+.log li{display:grid;grid-template-columns:70px 64px minmax(0,1fr);gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}
+.log .k{font-weight:700}.log .k.promote{color:var(--ok)}.log .k.promote_denied{color:var(--bad)}.log .k.rollback{color:var(--warn)}
+.log .at{color:var(--muted);font-variant-numeric:tabular-nums}.log .new{animation:fl 1.2s}
+.empty{color:var(--muted);font-size:14px}
+.links{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:16px;font-size:14px}.links a{color:var(--accent)}
+.lost{position:fixed;inset:auto 16px 16px 16px;background:var(--bad);color:#fff;padding:10px 14px;border-radius:10px;display:none}
+.lost.show{display:block}.mok{color:var(--ok);font-weight:700}.mbad{color:var(--bad);font-weight:700}
+code{background:var(--chip);border-radius:4px;padding:0 4px;font-size:13px}
+.checks{list-style:none;margin:0 0 14px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:8px}
+.checks li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;display:flex;gap:10px}
+.checks li .i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--chip);color:var(--muted)}
+.checks li.pass{border-color:var(--ok);background:var(--ok-soft)}.checks li.pass .i{background:var(--ok);color:var(--card)}
+.checks li.fail{border-color:var(--bad);background:var(--bad-soft)}.checks li.fail .i{background:var(--bad);color:var(--card)}
+.checks li b{display:block}.checks li small{color:var(--muted)}
+.note{font-size:14px;background:var(--chip);border-radius:10px;padding:10px 12px;margin-top:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1 id="h1">방금 만든 것을 화면으로 확인하기</h1>
+  <p class="lead" id="lead">여러분의 코드를 그대로 띄운 화면입니다. 데이터는 모두 가상입니다.</p>
+
+  <ul class="checks" id="checks" hidden></ul>
+  <ol class="steps" id="steps" hidden>
+    <li data-s="1"><span class="n">1</span><span><b>훈련생 한 명을 넣어 본다</b><small>슬라이더를 움직이면 위험도가 바로 바뀝니다</small></span></li>
+    <li data-s="2"><span class="n">2</span><span><b>v4를 올려 본다</b><small>내 관문이 막는지 봅니다</small></span></li>
+    <li data-s="3"><span class="n">3</span><span><b>v3를 올린다</b><small>같은 훈련생의 답이 바뀌는지 봅니다</small></span></li>
+    <li data-s="4"><span class="n">4</span><span><b>되돌린다</b><small>버전을 안 대고 직전으로 돌아오는지 봅니다</small></span></li>
+  </ol>
+
+  <div class="now">
+    <span class="dot" id="dot"></span>
+    <span>별칭 production 이 가리키는 모델</span>
+    <span class="v" id="nowV">—</span>
+    <span id="nowL"></span>
+    <small id="nowF"></small>
+  </div>
+
+  <div class="layout">
+    <section class="card" id="ask">
+      <span class="no">① 실습 4 · 추론 API</span>
+      <h2>훈련생 한 명을 넣으면, 내 API가 위험도를 답합니다</h2>
+      <p class="here">📍 화면은 <code>POST /predict</code>에 여섯 숫자를 보내고 답을 받아 그립니다. 점검기가 하는 일을 눈으로 하는 것입니다.</p>
+      <div class="presets">
+        <button type="button" data-p="good">성실한 훈련생</button>
+        <button type="button" data-p="newgen" title="출석은 높은데 과제가 밀리는 2026-2 기수형">새 기수형 훈련생★</button>
+        <button type="button" data-p="bad">흔들리는 훈련생</button>
+      </div>
+      <div id="fields"></div>
+      <div class="gauge">
+        <div class="bar"><div class="fill" id="fill"></div><div class="th"></div></div>
+        <div class="scale"><span>0 · 안전</span><span>기준 0.5</span><span>1 · 위험</span></div>
+      </div>
+      <div class="answer" id="answer">
+        <span class="risk" id="risk">—</span>
+        <span class="verdict" id="verdict"></span>
+        <span class="who" id="by"></span>
+      </div>
+      <div class="change" id="change"></div>
+      <div id="badBox" hidden><button type="button" id="badBtn">잘못된 값 보내 보기 (출석률 1.5)</button> <span class="who" id="badAns"></span></div>
+    </section>
+
+    <section class="card">
+      <span class="no" id="m_no">② 실습 6 · 관문과 되돌리기</span>
+      <h2 id="m_h">모델 바꿔 끼우기 — 초록 칸이 지금 답하는 모델</h2>
+      <p class="here" id="m_here">📍 「올려 보기」는 <b>여러분의</b> <code>promote.py</code>를, 「되돌리기」는 <code>rollback.py</code>를 그대로 돌립니다. 서버는 다시 띄우지 않고 <b>별칭(production)만 옮깁니다</b>.</p>
+      <div class="models" id="models"></div>
+      <p class="rule" id="rule"></p>
+      <div class="rollback" id="rbBox"><button type="button" id="rb">↩ 직전으로 되돌리기</button>
+        <span class="who">처음부터 다시: 서버 창을 Ctrl+C 로 끄고 <code>rmdir /s /q mlruns</code> · <code>del mlflow.db 승격이력.jsonl</code> · <code>python 준비.py</code> (<code>준비.py</code> 만 다시 돌리면 v5~v8 로 또 등록됩니다)</span></div>
+      <div class="note" id="lab4note" hidden>이 카드들에 「올려 보기」 버튼이 생기는 것은 <b>실습 6</b>입니다. 실습 4에서는 <b>내 API가 별칭이 가리키는 모델로 답하는지</b>만 봅니다 — 위 확인 목록의 ③.</div>
+      <div class="result" id="result"></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px" id="logCard">
+    <span class="no">③ 기록 · 승격이력.jsonl</span>
+    <h2>올리고, 막히고, 되돌린 일이 모두 한 줄씩 남습니다</h2>
+    <p class="here">📍 기록이 안 쌓이면 <code>promote.py</code> TODO 3 · <code>rollback.py</code> TODO 2 를 보십시오.</p>
+    <ul class="log" id="log"></ul>
+  </section>
+
+  <div class="links"><a href="/docs">API 설명서 (/docs) →</a></div>
+</main>
+<div class="lost" id="off">서버와 연결이 끊겼습니다 — 서버 창(검은 창)이 켜져 있는지 확인하십시오.</div>
+
+<script>
+const F = [
+  {k:'attend_rate_4w',    t:'최근 4주 출석률',  min:0, max:1,  step:0.01, pct:true},
+  {k:'late_count_4w',     t:'최근 4주 지각',    min:0, max:20, step:1, unit:'회'},
+  {k:'assign_submit_rate',t:'과제 제출률',      min:0, max:1,  step:0.01, pct:true},
+  {k:'assign_late_rate',  t:'과제 지각 제출률', min:0, max:1,  step:0.01, pct:true},
+  {k:'consult_count',     t:'상담 횟수',        min:0, max:10, step:1, unit:'회'},
+  {k:'prior_experience',  t:'관련 경력',        bool:true},
+];
+const P = {
+  good:  {attend_rate_4w:0.97,late_count_4w:0,assign_submit_rate:0.95,assign_late_rate:0.05,consult_count:1,prior_experience:1},
+  newgen:{attend_rate_4w:0.95,late_count_4w:0,assign_submit_rate:0.5,assign_late_rate:0.5,consult_count:0,prior_experience:1},
+  bad:   {attend_rate_4w:0.62,late_count_4w:5,assign_submit_rate:0.4,assign_late_rate:0.3,consult_count:0,prior_experience:0},
+};
+const v = {...P.bad};
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+let last = null, state = null, timer = null, mode = 'lab6';
+const C = {}; // 실습 4 확인 목록
+
+function done(n){ const li = document.querySelector(`#steps li[data-s="${n}"]`); if (li) li.classList.add('done'); }
+function fmt(f, x){ return f.pct ? Math.round(x*100)+'%' : f.bool ? (x ? '있음' : '없음') : x + (f.unit||''); }
+
+function buildFields(){
+  const box = $('fields'); box.replaceChildren();
+  for (const f of F){
+    const d = el('div','field'), top = el('div','top');
+    top.append(el('span',null,f.t), el('span','val')); d.append(top);
+    if (f.bool){
+      const t = el('div','toggle');
+      for (const [x,lab] of [[0,'없음'],[1,'있음']]){
+        const b = el('button',null,lab); b.type='button'; b.dataset.x = x;
+        b.onclick = () => { v[f.k] = x; sync(); ask(); }; t.append(b);
+      }
+      d.append(t);
+    } else {
+      const r = el('input'); Object.assign(r,{type:'range',min:f.min,max:f.max,step:f.step});
+      r.oninput = () => { v[f.k] = Number(r.value); sync(); clearTimeout(timer); timer = setTimeout(ask,150); };
+      d.append(r);
+    }
+    d.dataset.k = f.k; box.append(d);
+  }
+  sync();
+}
+function sync(){
+  for (const f of F){
+    const d = document.querySelector(`.field[data-k="${f.k}"]`);
+    d.querySelector('.val').textContent = fmt(f, v[f.k]);
+    const r = d.querySelector('input'); if (r) r.value = v[f.k];
+    d.querySelectorAll('.toggle button').forEach(b => b.classList.toggle('on', Number(b.dataset.x) === v[f.k]));
+  }
+}
+
+async function call(url, opt){
+  try { const r = await fetch(url, opt); $('off').classList.remove('show'); $('dot').classList.remove('off'); return r; }
+  catch(e){ $('off').classList.add('show'); $('dot').classList.add('off'); throw e; }
+}
+
+/* ── 실습 4 확인 목록: 내 TODO 가 됐는지 화면이 대신 봐 줍니다 ── */
+const CHECKS = [
+  ['predict','① /predict 가 답한다','훈련생을 넣으면 위험도가 온다'],
+  ['model','② GET /model 이 열려 있다','TODO 2 — 지금 누가 답하는지 밖에서 묻는다'],
+  ['alias','③ 별칭이 가리키는 모델이 답한다','TODO 1 — 버전 1이 박혀 있으면 옛 모델이 답한다'],
+  ['valid','④ 잘못된 값을 거절한다','TODO 3 — 아래 「잘못된 값 보내 보기」를 누른다'],
+  ['version','⑤ 답에 버전이 실려 온다','TODO 4 — 「이 답은 어느 모델이 줬나」'],
+];
+function renderChecks(){
+  const ul = $('checks'); ul.replaceChildren();
+  for (const [k,t,s] of CHECKS){
+    const st = C[k], li = el('li', st === true ? 'pass' : st === false ? 'fail' : null);
+    li.append(el('span','i', st === true ? '✓' : st === false ? '✕' : '?'));
+    const sp = el('span'); sp.append(el('b',null,t), el('small',null, typeof C[k+'_msg'] === 'string' ? C[k+'_msg'] : s)); li.append(sp);
+    ul.append(li);
+  }
+}
+
+async function ask(user=true){
+  const r = await call('/predict',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(v)});
+  if (!r.ok){ $('risk').textContent = '오류 ' + r.status; C.predict = false; C.predict_msg = `/predict 가 ${r.status} 를 돌려줬습니다 — 서버 창의 오류를 보십시오`; renderChecks(); return; }
+  const a = await r.json();
+  C.predict = true;
+  const pct = Math.round(a.risk*1000)/10;
+  $('fill').style.width = pct+'%'; $('fill').classList.toggle('hi', a.label === 1);
+  $('risk').textContent = Number(a.risk).toFixed(4);
+  const vd = $('verdict'); vd.textContent = a.label ? '상담 대상' : '관찰'; vd.className = 'verdict ' + (a.label ? 'hi' : 'lo');
+  const ver = a.version != null ? String(a.version) : null;
+  if (ver){
+    const lab = state ? (state.versions.find(x => x.version === ver)||{}).label : '';
+    $('by').textContent = `답한 모델: v${ver}${lab ? ' ('+lab+')' : ''}`;
+    C.version = true; C.version_msg = `답에 v${ver} 가 실려 옵니다`;
+    if (state && state.current){ C.alias = ver === state.current; C.alias_msg = C.alias ? `답한 v${ver} = 별칭이 가리키는 v${state.current}` : `답한 것은 v${ver}, 별칭은 v${state.current} — 아직 버전 번호로 부르고 있습니다 (TODO 1)`; }
+  } else {
+    $('by').textContent = '답한 모델: 알 수 없음 — 답에 버전이 없습니다';
+    C.version = false; C.version_msg = '답에 version 칸이 없습니다 (TODO 4)';
+    C.alias = undefined; C.alias_msg = '답에 버전이 없어 아직 판정할 수 없습니다 — ⑤(TODO 4)를 먼저';
+  }
+  const ch = $('change'); ch.replaceChildren();
+  if (last && ver && last.version !== ver && last.key === JSON.stringify(v)){
+    ch.append('같은 훈련생인데 — ', el('b',null,`v${last.version}일 때 ${last.risk.toFixed(4)}`), ' → ',
+              el('b',null,`v${ver}일 때 ${Number(a.risk).toFixed(4)}`), ' · 모델만 바뀌었고 API 코드는 그대로입니다.');
+    $('answer').classList.remove('flash'); void $('answer').offsetWidth; $('answer').classList.add('flash');
+  }
+  last = {version:ver, risk:Number(a.risk), key:JSON.stringify(v)};
+  if (user) done(1);
+  if (mode === 'lab4') renderChecks();
+}
+
+async function checkModel(){
+  try {
+    const r = await call('/model');
+    if (!r.ok){ C.model = false; C.model_msg = `GET /model 이 ${r.status} — 아직 열지 않았습니다 (TODO 2)`; return; }
+    const m = await r.json(); C.model = true;
+    C.model_msg = `v${m.version} @${m.alias} · 쓰는 특징 ${(m.features_used||[]).length}개`;
+  } catch(e){}
+}
+
+$('badBtn').onclick = async () => {
+  const r = await call('/predict',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...v, attend_rate_4w:1.5})});
+  C.valid = r.status >= 400 && r.status < 500;
+  $('badAns').textContent = C.valid ? `거절됨 (${r.status}) — 약속 밖의 값은 문 앞에서 막힙니다` : `받아 버렸습니다 (${r.status}) — 출석률 1.5 로 위험도를 계산했습니다 (TODO 3)`;
+  C.valid_msg = $('badAns').textContent; renderChecks();
+};
+
+function gateLine(name, x, floor){
+  const m = el('div','meter'), bar = el('div','bar'), fill = el('div','fill'), th = el('div','th');
+  fill.style.width = Math.round(x*100)+'%'; if (x < floor) fill.classList.add('hi');
+  th.style.left = Math.round(floor*100)+'%'; bar.append(fill, th);
+  m.append(el('span',null,name), bar, el('span', x < floor ? 'mbad' : 'mok', Number(x).toFixed(2)));
+  return m;
+}
+
+function render(s, fresh){
+  state = s;
+  $('nowV').textContent = s.current ? 'v' + s.current : '없음';
+  $('nowL').textContent = s.label || '';
+  const cur = s.versions.find(x => x.production);
+  $('nowF').textContent = cur && cur.features ? `· 쓰는 특징 ${cur.features}개` : '';
+  const box = $('models'); box.replaceChildren();
+  for (const m of s.versions){
+    const c = el('div','m' + (m.production ? ' prod' : ''));
+    if (m.production) c.append(el('span','tag','production'));
+    c.append(el('div','ver','v'+m.version), el('div','lab',m.label));
+    const g = el('div','g');
+    g.textContent = m.gate ? `지난 관문: 재현율 ${m.gate.recall} · 정밀도 ${m.gate.precision}` : (m.features ? `특징 ${m.features}개` : '');
+    c.append(g);
+    if (mode === 'lab6'){
+      const b = el('button', m.production ? null : 'main', m.production ? '지금 운영 중' : '올려 보기');
+      b.type = 'button'; b.disabled = m.production; b.onclick = () => promote(m.version);
+      c.append(b);
+    }
+    box.append(c);
+  }
+  $('rule').textContent = mode === 'lab6' ? `관문 기준(README): 재현율 ≥ ${s.floor.recall} · 정밀도 ≥ ${s.floor.precision} — 이 기준을 세우는 것이 promote.py TODO 1 입니다.` : '';
+  const log = $('log'); log.replaceChildren();
+  if (!s.history.length) log.append(el('li','empty','아직 기록이 없습니다.'));
+  const name = {promote:'승격', promote_denied:'거절', rollback:'되돌림'};
+  s.history.slice().reverse().forEach((h,i) => {
+    const li = el('li', fresh && i === 0 ? 'new' : null);
+    const why = (h.reasons && h.reasons.length) ? h.reasons.join(' · ') : (h.why || '');
+    li.append(el('span','at',String(h.at||'').slice(11)), el('span','k '+h.action, name[h.action]||h.action),
+              el('span',null,`v${h.from} → v${h.to}  ${why}`));
+    log.append(li);
+  });
+}
+
+function showResult(kind, title, lines, gate, text){
+  const r = $('result'); r.className = 'result show ' + kind; r.replaceChildren(el('div','t',title));
+  for (const l of lines) if (l) r.append(el('div',null,l));
+  if (gate && gate.recall != null) r.append(gateLine('재현율', gate.recall, state.floor.recall), gateLine('정밀도', gate.precision, state.floor.precision));
+  if (text){ const d = el('details'); d.append(el('summary',null,'터미널에 찍힌 그대로 보기'), el('pre',null,text)); r.append(d); }
+}
+
+async function busy(fn){
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  try { await fn(); } catch(e){ showResult('bad','서버에서 오류가 났습니다',[String(e)]); }
+  finally { render(state); document.querySelectorAll('.presets button,#fields button,#rb,#badBtn').forEach(b => b.disabled = false); }
+}
+
+async function promote(ver){
+  await busy(async () => {
+    showResult('info', `v${ver} 를 올려 보는 중…`, ['여러분의 promote.py 가 돌고 있습니다.']);
+    const r = await call('/demo/promote/'+ver, {method:'POST'}); const a = await r.json();
+    render(a.state, true);
+    const h = a.result, moved = a.before !== a.after;
+    const label = (a.state.versions.find(x => x.version === String(ver))||{}).label || '';
+    if (a.code === '오류'){ showResult('bad', 'promote.py 가 오류로 멈췄습니다', ['아래를 펼쳐 오류를 보십시오.'], null, a.text); }
+    else if (!moved){
+      showResult('bad', `❌ v${ver} 올리지 않음 — production 은 v${a.after} 그대로`, h && h.reasons ? ['내 관문이 막았습니다.', ...h.reasons] : ['별칭이 움직이지 않았습니다.', h ? '' : '기록도 남지 않았습니다 (TODO 3)'], h && h.gate, a.text);
+      if (h && h.action === 'promote_denied') done(2);
+    } else {
+      const bad = /불량/.test(label);
+      showResult(bad ? 'bad' : 'ok', bad ? `⚠ 불량 모델 v${ver} 가 운영에 올라갔습니다` : `✅ 승격 — v${a.before} → v${a.after}`,
+        [bad ? '관문이 없으면 이렇게 됩니다 — promote.py TODO 1 을 세우고, 「직전으로 되돌리기」를 누르십시오.' : '왼쪽 위험도가 새 모델의 답으로 바뀌었습니다.',
+         h ? `되돌릴 자리: v${h.from}` : '⚠ 기록이 남지 않았습니다 — 되돌릴 자리를 모릅니다 (TODO 2·3)'], h && h.gate, a.text);
+      if (String(a.after) === '3' && !bad) done(3);
+    }
+    await ask(false);
+  });
+}
+
+$('rb').onclick = () => busy(async () => {
+  const r = await call('/demo/rollback',{method:'POST'}); const a = await r.json();
+  render(a.state, true);
+  if (a.code === '오류') showResult('bad','rollback.py 가 오류로 멈췄습니다',['아래를 펼쳐 오류를 보십시오.'],null,a.text);
+  else if (a.before !== a.after){ showResult('ok', `↩ 되돌림 — v${a.before} → v${a.after}`, ['고친 코드: 없음 · 다시 배포: 없음 · 별칭만 옮겼습니다.', a.result ? '' : '⚠ 되돌린 일이 기록되지 않았습니다 (rollback.py TODO 2)'], null, a.text); done(4); }
+  else showResult('info', '되돌리지 않았습니다', ['버전을 안 댔을 때 직전을 찾는 것이 rollback.py TODO 1 입니다.'], null, a.text);
+  await ask(false);
+});
+
+document.querySelectorAll('.presets button').forEach(b => b.onclick = () => { Object.assign(v, P[b.dataset.p]); sync(); ask(); });
+
+(async () => {
+  buildFields();
+  try {
+    const r = await call('/demo/state'); const s = await r.json(); mode = s.mode || 'lab6';
+    if (mode === 'lab4'){
+      $('h1').textContent = '실습 4 — 내 API를 화면으로 확인하기';
+      $('lead').textContent = '여러분의 serve.py 를 그대로 띄웠습니다. 위 확인 목록이 모두 초록이면 점검기도 통과할 가능성이 큽니다. 데이터는 모두 가상입니다.';
+      $('checks').hidden = false; $('badBox').hidden = false; $('lab4note').hidden = false;
+      $('rbBox').hidden = true; $('logCard').hidden = true;
+      $('m_no').textContent = '② 등록된 모델'; $('m_h').textContent = '초록 칸 = 별칭 production 이 가리키는 모델';
+      $('m_here').textContent = '📍 실습 4의 약속: 버전 번호가 아니라 별칭으로 부른다. 별칭이 옮겨 가면 API 코드를 안 고쳐도 답하는 모델이 바뀝니다.';
+    } else {
+      $('h1').textContent = '실습 6 — 내 promote · rollback 을 버튼으로 눌러 보기';
+      $('lead').textContent = '여러분의 promote.py · rollback.py 를 그대로 돌립니다. 관문을 아직 안 세웠다면 불량 모델도 올라갑니다 — 그것도 그대로 보입니다. 데이터는 모두 가상입니다.';
+      $('steps').hidden = false;
+    }
+    render(s); await checkModel(); await ask(false);
+  } catch(e){}
+  setInterval(async () => { try { await call('/health'); } catch(e){} }, 5000);
+})();
+</script>
+</body>
+</html>
