@@ -84,20 +84,35 @@ def run_one(name, cfg):
     }
 
     with mlflow.start_run(run_name=name) as run:
+        
         # ── TODO 1 ─ 설정을 남기십시오 ─────────────────────────
         # 점검기가 보는 것: 기록마다 설정이 있고, 설정이 **서로 달라야** 합니다.
         # 남길 만한 것: recipe · features · n_features · class_weight · C ·
         #               seed · cohorts · data_sha256
         # mlflow.log_params({...})
-
+            
+        mlflow.log_params({
+            "recipe": name,
+            "features": ",".join(feats),
+            "n_features": len(feats),
+            "class_weight": str(cfg["class_weight"]),
+            "C": cfg["C"],
+            "seed": SEED,
+            "data_sha256": DATA_SHA[:16],
+        })
+        
+    
         # ── TODO 2 ─ 지표를 남기십시오 ─────────────────────────
         # metrics 딕셔너리가 이미 위에 있습니다.
         # mlflow.log_metrics(...)
+        mlflow.log_metrics(metrics)
+    
+      
 
         # ── TODO 3 ─ 모델 자체도 같이 남기고, 이름에 등록하십시오 ────
         # 기록만 있고 물건이 없으면 꺼내 쓸 수 없습니다.
         # mlflow.sklearn.log_model(model, name="model", registered_model_name=...)
-
+        mlflow.sklearn.log_model(model, name="model", registered_model_name=MODEL_NAME)
         return {"name": name, "run_id": run.info.run_id, **metrics}
 
 
@@ -114,7 +129,12 @@ best = max(results, key=lambda r: r["accuracy"])
 # 등록된 버전 목록에서 best["run_id"] 와 이어지는 버전을 찾아
 # client.set_registered_model_alias(MODEL_NAME, "production", 그_버전) 를 부릅니다.
 # versions = client.search_model_versions(f"name='{MODEL_NAME}'")
+versions = client.search_model_versions(f"name='{MODEL_NAME}'")
+best_version = next(v.version for v in versions if v.run_id == best["run_id"])
+client.set_registered_model_alias(MODEL_NAME, "production", best_version)
 
+
+print(f"production → v{best_version}")
 head = "| 설정 | 정확도 | 재현율 | 정밀도 | F1 | AUC |\n|---|---|---|---|---|---|\n"
 rows = "".join(
     f"| {r['name']} | {r['accuracy']} | {r['recall']} | {r['precision']} | {r['f1']} | {r['auc']} |\n"
