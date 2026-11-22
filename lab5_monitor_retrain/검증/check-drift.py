@@ -49,7 +49,14 @@ try:
 except Exception as e:
     check("M0b 읽을 수 있는 JSON 이다", False, why=str(e)); report_and_exit()
 
-cols = R.get("features") or {}
+state = "이상" if v >= PSI_ALERT else ("주의" if v >= PSI_WATCH else "안정")
+cols[f] = {"baseline_mean": round(float(base[f].mean()), 4),
+               "target_mean": round(float(new[f].mean()), 4),
+               "psi": v, "state": state, "drift": state == "이상"}
+if state == "이상":
+        drifted.append(f)
+elif state == "주의":
+        watched.append(f)
 have = [f for f in FEATURES if f in cols and "psi" in (cols.get(f) or {})]
 check("M1  여섯 특징을 모두 견주었다 (psi)", len(have) == len(FEATURES),
       why=f"빠진 열: {[f for f in FEATURES if f not in have]}", info=f"{len(have)}/6")

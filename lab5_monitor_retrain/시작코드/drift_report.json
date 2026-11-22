@@ -1,0 +1,72 @@
+{
+  "baseline": {
+    "cohorts": [
+      "2025-1",
+      "2025-2"
+    ],
+    "rows": 620,
+    "performance": {}
+  },
+  "target": {
+    "cohort": "2026-2",
+    "rows": 320
+  },
+  "features": {
+    "attend_rate_4w": {
+      "baseline_mean": 0.7953,
+      "target_mean": 0.9359,
+      "psi": 3.7046,
+      "state": "미판정",
+      "drift": false
+    },
+    "late_count_4w": {
+      "baseline_mean": 2.2726,
+      "target_mean": 0.0594,
+      "psi": 7.5131,
+      "state": "미판정",
+      "drift": false
+    },
+    "assign_submit_rate": {
+      "baseline_mean": 0.7632,
+      "target_mean": 0.7167,
+      "psi": 0.1577,
+      "state": "미판정",
+      "drift": false
+    },
+    "assign_late_rate": {
+      "baseline_mean": 0.2899,
+      "target_mean": 0.2809,
+      "psi": 0.0327,
+      "state": "미판정",
+      "drift": false
+    },
+    "consult_count": {
+      "baseline_mean": 0.7952,
+      "target_mean": 0.8,
+      "psi": 0.0002,
+      "state": "미판정",
+      "drift": false
+    },
+    "prior_experience": {
+      "baseline_mean": 0.3274,
+      "target_mean": 0.3656,
+      "psi": 0.0065,
+      "state": "미판정",
+      "drift": false
+    }
+  },
+  "drifted": [],
+  "watched": [],
+  "performance": {
+    "model_version": 2,
+    "on_baseline": {},
+    "on_target": {}
+  },
+  "decision": {
+    "retrain": false,
+    "reasons": [],
+    "recall_floor": 0.6
+  },
+  "retrained": null,
+  "production_alias_after": 2
+}
